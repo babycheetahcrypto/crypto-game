@@ -26,96 +26,74 @@ const styles = `
   }
 `
 
-// Real TelegramWebApp API
-declare global {
-  interface Window {
-    Telegram: {
-      WebApp: {
-        initData: string;
-        sendData: (data: any) => void;
-        showAlert: (message: string) => void;
-        showConfirm: (message: string, callback: (confirmed: boolean) => void) => void;
-        ready: () => void;
-        expand: () => void;
-        close: () => void;
-        MainButton: {
-          text: string;
-          onClick: (callback: () => void) => void;
-          show: () => void;
-          hide: () => void;
-        };
-        BackButton: {
-          show: () => void;
-          hide: () => void;
-        };
-        onEvent: (eventType: string, callback: () => void) => void;
+// Real TelegramWebApp API 
+declare global { 
+  interface Window { 
+    Telegram: { 
+      WebApp: { 
+        initData: string; 
+        sendData: (data: any) => void; 
+        showAlert: (message: string) => void; 
+        showConfirm: (message: string, callback: (confirmed: boolean) => void) => void; 
+        ready: () => void; 
+        expand: () => void; 
+        close: () => void; 
+        MainButton: { 
+          text: string; 
+          onClick: (callback: () => void) => void; 
+          show: () => void; 
+          hide: () => void; 
+        }; 
+        BackButton: { 
+          show: () => void; 
+          hide: () => void; 
+        }; 
+        onEvent: (eventType: string, callback: () => void) => void; 
         getUserName: () => string;
         getUserProfilePhoto: () => string;
+        hapticFeedback: { 
+          impactOccurred: (style: string) => void; 
+        }; 
+        openTelegramLink: (url: string) => void; 
+        openLink: (url: string) => void; 
+      }; 
+    }; 
+  } 
+} 
+
+// Check if Telegram WebApp is available 
+const TelegramWebApp = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) 
+    ? window.Telegram.WebApp 
+    : { 
+        initData: '', // Add this line to provide a default empty string
+        sendData: () => console.log("sendData called, but Telegram WebApp is not available. "), 
+        showAlert: (message: string) => alert(message), 
+        showConfirm: (message: string, callback: (confirmed: boolean) => void) => {
+          // Fallback to browser confirm dialog
+          const result = window.confirm(message);
+          callback(result);
+        },
+        getUserName: () => "Player",
+        getUserProfilePhoto: () => "https://example.com/user_profile_photo.jpg",
         hapticFeedback: {
-          impactOccurred: (style: string) => void;
-        };
-        openTelegramLink: (url: string) => void;
-        openLink: (url: string) => void;
-      };
-    };
-  }
-}
-
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-
-const CryptoGame = () => {
-    const [isLoading, setIsLoading] = useState(true);
-    const [user, setUser ] = useState({ name: "Player", coins: 0 });
-
-    // Check if Telegram WebApp is available
-    const TelegramWebApp = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) 
-        ? window.Telegram.WebApp 
-        : { 
-            sendData: () => console.log("sendData called, but Telegram WebApp is not available."),
-            showAlert: (message) => alert(message),
-            getUser Name: () => "Player", // Corrected property name
-            getUser ProfilePhoto: () => "https://example.com/user_profile_photo.jpg", // Corrected property name
-            // Add other mock methods as needed
-        };
-
-    useEffect(() => {
-        // Simulate loading data
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2000); // Simulates loading for 2 seconds
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Initialize user state with Telegram data
-    useEffect(() => {
-        const username = TelegramWebApp.getUser Name(); // Use corrected method name
-        setUser (prevUser  => ({ ...prevUser , name: username }));
-    }, []);
-
-    // Loading state
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-black overflow-hidden">
-                <div className="text-center">
-                    <Image src="https://example.com/loading-image.png" alt="Loading" width={100} height={100} />
-                    <p>Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
-    // Main game content
-    return (
-        <div className="min-h-screen bg-black text-white">
-            <h1>Welcome, {user.name}!</h1>
-            <p>You have {user.coins} coins.</p>
-            {/* Add more game components here */}
-        </div>
-    );
-};
-
-export default CryptoGame;
+          impactOccurred: (style: string) => {
+            // Fallback vibration if available
+            if ('vibrate' in navigator) {
+              navigator.vibrate(50)
+            }
+            console.log(`Haptic feedback: ${style}`)
+          }
+        },
+        openLink: (url: string) => {
+          // Fallback to browser window open if Telegram WebApp is not available
+          window.open(url, '_blank')
+        },
+        openTelegramLink: (url: string) => {
+          // Fallback to browser window open if Telegram WebApp is not available
+          window.open(url, '_blank')
+        },
+        // Add other mock methods as needed 
+    };    
 
 const StarryBackground: React.FC = () => (
   <div className="fixed inset-0 z-0">
@@ -373,32 +351,35 @@ export default function Component() {
     }
   }, [level])
 
-  const generateDailyChallenge = useCallback(() => {
-    const challenges = [
-      { task: 'Click 1000 times', reward: 5000 },
-      { task: 'Earn 10000 coins', reward: 2000 },
-      { task: 'Buy 5 shop items', reward: 3000 },
-      { task: 'Reach a new level', reward: 4000 },
-    ];
-    const randomChallenge = challenges[Math.floor(Math.random() * challenges.length)];
-    setDailyChallenge({ ...randomChallenge, completed: false });
-  }, [])
 
   const clickCoin = useCallback((event: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
     event.preventDefault(); // Prevent default touch behavior
+    
+    // Create a function to get X and Y coordinates that works for both mouse and touch events
+    const getCoordinates = (e: React.MouseEvent<HTMLButtonElement> | React.TouchEvent<HTMLButtonElement>) => {
+      if ('clientX' in e) {
+        return { x: e.clientX, y: e.clientY };
+      } else if ('touches' in e && e.touches.length > 0) {
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+      return { x: 0, y: 0 };
+    };
+  
+    const { x, y } = getCoordinates(event);
+  
     if (energy > 0) {
       setUser(prevUser => {
         const clickValue = clickPower * multiplier
         const newCoins = prevUser.coins + clickValue
         const newExp = prevUser.exp + 1
         const newLevel = newExp >= 100 ? prevUser.level + 1 : prevUser.level
-
+  
         // Add visual number show with animation
         const numberShow = document.createElement('div')
         numberShow.textContent = `+${formatNumber(clickValue)}`
         numberShow.style.position = 'absolute'
-        numberShow.style.left = `${event.clientX || (event.touches && event.touches[0].clientX) || 0}px`
-        numberShow.style.top = `${event.clientY || (event.touches && event.touches[0].clientY) || 0}px`
+        numberShow.style.left = `${x}px`
+        numberShow.style.top = `${y}px`
         numberShow.style.color = 'white'
         numberShow.style.fontSize = '24px'
         numberShow.style.fontWeight = 'bold'
@@ -406,7 +387,7 @@ export default function Component() {
         numberShow.style.zIndex = '9999'
         numberShow.style.textShadow = '0 0 10px #ffffff,  0 0 20px #ffffff, 0 0 30px #ffffff'
         document.body.appendChild(numberShow)
-
+  
         // Animate the number
         numberShow.animate([
           { opacity: 1, transform: 'translateY(0) scale(1)' },
@@ -415,7 +396,7 @@ export default function Component() {
           duration: 1000,
           easing: 'ease-out'
         }).onfinish = () => document.body.removeChild(numberShow);
-
+  
         return {
           ...prevUser,
           coins: newCoins,
@@ -424,17 +405,17 @@ export default function Component() {
         }
       })
       setEnergy(prev => Math.max(prev - 1, 0))
-
+  
       //  Trigger haptic feedback
       if (settings.vibration) {
         TelegramWebApp.hapticFeedback.impactOccurred('medium')
       }
-
+  
       // Play sound effect
       if (settings.soundEffect) {
         playCoinSound()
       }
-
+  
       // Send tap data to Telegram Mini App
       TelegramWebApp.sendData({ action: 'tap', amount: clickPower * multiplier })
     }
@@ -540,7 +521,7 @@ export default function Component() {
       const newDay = (dailyReward.day % 30) + 1
       const completed = newDay === 1 
 
-      setDailyReward(prev => ({
+      setDailyReward(() => ({
         lastClaimed: now.toISOString(),
         streak: newStreak,
         day: newDay,
@@ -654,60 +635,99 @@ export default function Component() {
     }))
   }, [])
 
-  useEffect(() => {
-    generateDailyChallenge();
-  }, [generateDailyChallenge]);
+  export default function Component() {
+    // Your entire component code remains the same
+    const [currentUserRank, setCurrentUserRank] = useState(0);
+    const [leaderboardData, setLeaderboardData] = useState([]);
+  
+// Types defined at the top level
+type LeaderboardEntry = {
+  id: number;
+  name: string;
+  coins: number;
+  profitPerHour: number;
+  rank: number;
+};
 
-  useEffect(() => {
-    const initializeGame = async () => {
-      setIsLoading(true)
-      try {
-        
-        const params = new URLSearchParams(TelegramWebApp.initData);
-        const telegramId = params.get('user_id');
-        const username = params.get('username');
-        if (telegramId && username) {
-          setUser(prevUser => ({
-            ...prevUser,
-            name: username,
-            telegramId: telegramId,
-          }));
+// Leaderboard fetch function
+const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  try {
+    return Array.from({ length: 200 }, (_, i) => ({
+      id: i + 1,
+      name: `Player${i + 1}`,
+      coins: Math.floor(Math.random() * 1000000) + 500000,
+      profitPerHour: Math.floor(Math.random() * 50000) + 25000,
+      rank: i + 1
+    })).sort((a, b) => b.coins - a.coins);
+  } catch (error) {
+    console.error('Failed to fetch leaderboard:', error);
+    return [];
+  }
+};
+
+// Main component
+const []); // Add dependencies
+  
+    useEffect(() => {
+      let isMounted = true;
+  
+      const initializeGame = async () => {
+        setIsLoading(true);
+        try {
+          const params = new URLSearchParams(TelegramWebApp.initData);
+          const telegramId = params.get('user_id');
+          const username = params.get('username');
+          
+          if (telegramId && username && isMounted) {
+            setUser(prevUser => ({
+              ...prevUser,
+              name: username,
+              telegramId: telegramId,
+            }));
+          }
+          
+          // Simulate initialization delay
+          await new Promise(resolve => setTimeout(resolve, 2000)); 
+        } catch (error) {
+          console.error('Failed to initialize game:', error);
+          if (isMounted) {
+            TelegramWebApp.showAlert('Failed to load game data. Please try again.');
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
         }
-
-        
-        const leaderboardData = await fetchLeaderboard();
-        setLeaderboard(leaderboardData);
-
-        
-        await new Promise(resolve => setTimeout(resolve, 2000)); 
-      } catch (error) {
-        console.error('Failed to initialize game:', error);
-        TelegramWebApp.showAlert('Failed to load game data. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeGame();
-    TelegramWebApp.ready();
-    TelegramWebApp.expand();
-  }, []);
-
-  const fetchLeaderboard = async () => {
-    try {
-      
-      return Array.from({ length: 200 }, (_, i) => ({
-        id: i + 1,
-        name: `Player${i + 1}`,
-        coins: Math.floor(Math.random() * 1000000) + 500000,
-        profitPerHour: Math.floor(Math.random() * 50000) + 25000,
-        rank: i + 1
-      })).sort((a, b) => b.coins - a.coins);
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
-      return [];
+      };
+  
+      // Telegram WebApp initialization
+      const initTelegramWebApp = () => {
+        if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+          const TelegramWebApp = window.Telegram.WebApp;
+          TelegramWebApp.ready();
+          TelegramWebApp.expand();
+        }
+      };
+  
+      // Call initialization functions
+      initializeGame();
+      initTelegramWebApp();
+  
+    // Check if TelegramWebApp is available
+    if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+      const TelegramWebApp = window.Telegram.WebApp;
+      TelegramWebApp.ready();
+      TelegramWebApp.expand();
     }
+  
+    // Check if TelegramWebApp is available
+    if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+      // Telegram Web App environment
+      const TelegramWebApp = window.Telegram.WebApp;
+      TelegramWebApp.ready();
+      TelegramWebApp.expand();
   };
+
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -1393,7 +1413,6 @@ export default function Component() {
               const day = i + 1;
               const isCurrentDay = day === dailyReward.day;
               const isPastDay = day < dailyReward.day;
-              const isFutureDay = day > dailyReward.day;
               const reward = getDailyReward(day);
 
               return (
@@ -1513,7 +1532,7 @@ export default function Component() {
           <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 opacity-30 transform -skew-y-3"></div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          {Object.entries(friendsCoins).map(([friend, coins], index) => (
+          {Object.entries(friendsCoins).map(([friend, coins]) => (
             <div
               key={friend}
               className="flex justify-between items-center bg-gray-700 bg-opacity-50 p-4 rounded-lg backdrop-blur-md"
@@ -1577,26 +1596,22 @@ export default function Component() {
   )
 
 
-  const pageTransition = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-    transition: { duration: 0.3 }
-  }
 
   const [currentUserRank, setCurrentUserRank] = useState(0);
   const [leaderboardData, setLeaderboardData] = useState([]);
 
-  useEffect(() => {
-    const fetchLeaderboardData = async () => {
-      const data = await fetchLeaderboard();
-      setLeaderboardData(data);
-      setCurrentUserRank(Math.floor(Math.random() * 200) + 1);
-    };
-    fetchLeaderboardData();
-  }, []);
+// Define the type for a leaderboard entry
+type LeaderboardEntry = {
+  id: number;
+  name: string;
+  coins: number;
+  profitPerHour: number;
+  rank: number;
+};
 
-  const memoizedLeaderboard = useMemo(() => renderRating(), [leaderboardData, currentUserRank]);
+// Inside your component
+
+  const memoizedLeaderboard = useMemo(() => renderRating(), [leaderboardData, currentUserRank]); // Added closing parenthesis
 
   const showPopup = (popupType: string) => {
     if (!shownPopups.has(popupType)) {
@@ -1700,9 +1715,7 @@ export default function Component() {
       <StarryBackground />
       {renderHeader()}
       <div>
-        <div
-          className="flex-grow overflow-y-auto pb-20"
-        >
+        <div className="flex-grow overflow-y-auto pb-20">
           {currentPage === 'home' && renderHome()}
           {currentPage === 'shop' && renderShop()}
           {currentPage === 'tasks' && renderTasks()}
@@ -1770,7 +1783,7 @@ export default function Component() {
         {!shownPopups.has('congratulation') && congratulationPopup.show && (
           <CongratulationPopup />
         )}
-      </div>
+        </div>
     </div>
-  )
+  );
 }
