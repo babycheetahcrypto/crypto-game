@@ -232,14 +232,17 @@ type Task = {
 }
 
 export default function Component() {
-  const [user, setUser] = useState({
-    name: TelegramWebApp.getUserName(),
+  const [user, setUser ] = useState({
+    name: "Player", // Example initialization
     coins: 0,
     rank: 7352,
     level: 1,
     exp: 0,
-    profilePhoto: TelegramWebApp.getUserProfilePhoto(),
-  })
+    profilePhoto: "https://example.com/profile.jpg", // Example initialization
+  });
+
+  const [currentUserRank, setCurrentUserRank] = useState(0);
+  const [leaderboardData, setLeaderboardData] = useState([]);
   const [clickPower, setClickPower] = useState(1)
   const [profitPerHour, setProfitPerHour] = useState(0)
   const [wallet, setWallet] = useState<string | null>(null)
@@ -635,6 +638,41 @@ export default function Component() {
     }))
   }, [])
 
+
+  export default function Component() {
+    // Your entire component code remains the same
+    const [currentUserRank, setCurrentUserRank] = useState(0);
+    const [leaderboardData, setLeaderboardData] = useState([]);
+  
+// Types defined at the top level
+type LeaderboardEntry = {
+  id: number;
+  name: string;
+  coins: number;
+  profitPerHour: number;
+  rank: number;
+};
+
+// Leaderboard fetch function
+const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+  try {
+    return Array.from({ length: 200 }, (_, i) => ({
+      id: i + 1,
+      name: `Player${i + 1}`,
+      coins: Math.floor(Math.random() * 1000000) + 500000,
+      profitPerHour: Math.floor(Math.random() * 50000) + 25000,
+      rank: i + 1
+    })).sort((a, b) => b.coins - a.coins);
+  } catch (error) {
+    console.error('Failed to fetch leaderboard:', error);
+    return [];
+  }
+};
+
+// Main component
+const []); // Add dependencies
+  
+  
   export default function Component() {
     // Your entire component code remains the same
     const [currentUserRank, setCurrentUserRank] = useState(0);
@@ -684,7 +722,7 @@ const []); // Add dependencies
               name: username,
               telegramId: telegramId,
             }));
-          }
+          };
           
           // Simulate initialization delay
           await new Promise(resolve => setTimeout(resolve, 2000)); 
@@ -1600,18 +1638,9 @@ const []); // Add dependencies
   const [currentUserRank, setCurrentUserRank] = useState(0);
   const [leaderboardData, setLeaderboardData] = useState([]);
 
-// Define the type for a leaderboard entry
-type LeaderboardEntry = {
-  id: number;
-  name: string;
-  coins: number;
-  profitPerHour: number;
-  rank: number;
-};
 
 // Inside your component
 
-  const memoizedLeaderboard = useMemo(() => renderRating(), [leaderboardData, currentUserRank]); // Added closing parenthesis
 
   const showPopup = (popupType: string) => {
     if (!shownPopups.has(popupType)) {
@@ -1708,30 +1737,30 @@ type LeaderboardEntry = {
       </Button>
     </Popup>
   );
-
-  return (
-    <div className="min-h-screen bg-black text-white overflow-hidden relative">
-      <style>{styles}</style>
-      <StarryBackground />
-      {renderHeader()}
-      <div>
-        <div className="flex-grow overflow-y-auto pb-20">
-          {currentPage === 'home' && renderHome()}
-          {currentPage === 'shop' && renderShop()}
-          {currentPage === 'tasks' && renderTasks()}
-          {currentPage === 'rating' && memoizedLeaderboard}
-          {currentPage === 'wallet' && renderWallet()}
-          {currentPage === 'invite' && renderInvite()}
-          {currentPage === 'friendsActivity' && renderFriendsActivity()}
-          {currentPage === 'levels' && renderLevels()}
-          {currentPage === 'settings' && renderSettings()}
-          {currentPage === 'dailyReward' && renderDailyReward()}
-          {currentPage === 'trophies' && renderTrophies()}
+  
+    return (
+      <div className="min-h-screen bg-black text-white overflow-hidden relative">
+        <style>{styles}</style>
+        <StarryBackground />
+        {renderHeader()}
+        <div>
+          <div className="flex-grow overflow-y-auto pb-20">
+            {currentPage === 'home' && renderHome()}
+            {currentPage === 'shop' && renderShop()}
+            {currentPage === 'tasks' && renderTasks()}
+            {currentPage === 'rating' && renderRating()}
+            {currentPage === 'wallet' && renderWallet()}
+            {currentPage === 'invite' && renderInvite()}
+            {currentPage === 'friendsActivity' && renderFriendsActivity()}
+            {currentPage === 'levels' && renderLevels()}
+            {currentPage === 'settings' && renderSettings()}
+            {currentPage === 'dailyReward' && renderDailyReward()}
+            {currentPage === 'trophies' && renderTrophies()}
+          </div>
         </div>
-      </div>
-      {renderFooter()}
-
-      <div>
+        {renderFooter()}
+  
+        {/* Popup logic */}
         {!shownPopups.has('pph') && showPPHPopup && (
           <Popup
             title="Profit Accumulated!"
@@ -1755,7 +1784,7 @@ type LeaderboardEntry = {
             </Button>
           </Popup>
         )}
-
+  
         {!shownPopups.has('levelUp') && showLevelUpPopup && (
           <Popup
             title="Level Up!"
@@ -1784,6 +1813,5 @@ type LeaderboardEntry = {
           <CongratulationPopup />
         )}
         </div>
-    </div>
   );
 }
