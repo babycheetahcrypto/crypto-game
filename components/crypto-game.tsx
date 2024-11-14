@@ -229,16 +229,16 @@ type Task = {
   icon: React.ReactNode;
   
   action: () => void;
-}
+};
 
 export default function Component() {
   const [user, setUser ] = useState({
-    name: "Player", // Example initialization
+    name: TelegramWebApp.getUserName(),
     coins: 0,
     rank: 7352,
     level: 1,
     exp: 0,
-    profilePhoto: "https://example.com/profile.jpg", // Example initialization
+    profilePhoto: TelegramWebApp.getUserProfilePhoto(),
   });
 
   const [currentUserRank, setCurrentUserRank] = useState(0);
@@ -330,7 +330,7 @@ export default function Component() {
     { id: 10, description: "Follow X", reward: 1000, progress: 0, completed: false, claimed: false, icon: <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/X%203D%20icon-BKGCBNiG3sECcTXzWnsCIQKt2C7s2q.png" alt="X" width={48} height={48} />, action: () => followX() },
     { id: 11, description: "Follow Instagram", reward: 1000, progress: 0, completed: false, claimed: false, icon: <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Instagram%203D%20icon-oGuCqwnySi2zDrS8HlS44YDNgGaCuH.png" alt="Instagram" width={48} height={48} />, action: () => followInstagram() },
     { id: 12, description: "Follow WhatsApp", reward: 1000, progress: 0, completed: false, claimed: false, icon: <Image src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Whatsapp%203D%20icon-zQ7YPZyXLWhIzlUUDOv03O3EE8qWSI.png" alt="WhatsApp" width={48} height={48} />, action: () => followWhatsApp() },
-  ])
+  ]);
 
   const [leaderboard, setLeaderboard] = useState([])
 
@@ -630,28 +630,22 @@ export default function Component() {
   const updateTaskProgress = useCallback((taskId: number) => {
     setTasks(prevTasks => prevTasks.map(task => {
       if (task.id === taskId && !task.completed) {
-        const newProgress = task.progress + 1
-        const completed = newProgress >= (task.maxProgress || 1)
-        return { ...task, progress: newProgress, completed }
+        const newProgress = task.progress + 1;
+        const completed = newProgress >= (task.maxProgress || 1);
+        return { ...task, progress: newProgress, completed };
       }
-      return task
-    }))
-  }, [])
-
-
-  export default function Component() {
-    // Your entire component code remains the same
-    const [currentUserRank, setCurrentUserRank] = useState(0);
-    const [leaderboardData, setLeaderboardData] = useState([]);
+      return task;
+    }));
+  }, []);
   
-// Types defined at the top level
-type LeaderboardEntry = {
-  id: number;
-  name: string;
-  coins: number;
-  profitPerHour: number;
-  rank: number;
-};
+  // Types defined at the top level
+  type LeaderboardEntry = {
+    id: number;
+    name: string;
+    coins: number;
+    profitPerHour: number;
+    rank: number;
+  };
 
 // Leaderboard fetch function
 const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
@@ -668,95 +662,57 @@ const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
     return [];
   }
 };
+  
+useEffect(() => {
+  let isMounted = true;
 
-// Main component
-const []); // Add dependencies
-  
-  
-  export default function Component() {
-    // Your entire component code remains the same
-    const [currentUserRank, setCurrentUserRank] = useState(0);
-    const [leaderboardData, setLeaderboardData] = useState([]);
-  
-// Types defined at the top level
-type LeaderboardEntry = {
-  id: number;
-  name: string;
-  coins: number;
-  profitPerHour: number;
-  rank: number;
-};
+  const initializeGame = async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams(TelegramWebApp.initData);
+      const telegramId = params.get('user_id');
+      const username = params.get('username');
 
-// Leaderboard fetch function
-const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-  try {
-    return Array.from({ length: 200 }, (_, i) => ({
-      id: i + 1,
-      name: `Player${i + 1}`,
-      coins: Math.floor(Math.random() * 1000000) + 500000,
-      profitPerHour: Math.floor(Math.random() * 50000) + 25000,
-      rank: i + 1
-    })).sort((a, b) => b.coins - a.coins);
-  } catch (error) {
-    console.error('Failed to fetch leaderboard:', error);
-    return [];
-  }
-};
+      if (telegramId && username && isMounted) {
+        setUser (prevUser  => ({
+          ...prevUser ,
+          name: username,
+          telegramId: telegramId,
+        }));
+      }
 
-// Main component
-const []); // Add dependencies
-  
-    useEffect(() => {
-      let isMounted = true;
-  
-      const initializeGame = async () => {
-        setIsLoading(true);
-        try {
-          const params = new URLSearchParams(TelegramWebApp.initData);
-          const telegramId = params.get('user_id');
-          const username = params.get('username');
-          
-          if (telegramId && username && isMounted) {
-            setUser(prevUser => ({
-              ...prevUser,
-              name: username,
-              telegramId: telegramId,
-            }));
-          };
-          
-          // Simulate initialization delay
-          await new Promise(resolve => setTimeout(resolve, 2000)); 
-        } catch (error) {
-          console.error('Failed to initialize game:', error);
-          if (isMounted) {
-            TelegramWebApp.showAlert('Failed to load game data. Please try again.');
-          }
-        } finally {
-          if (isMounted) {
-            setIsLoading(false);
-          }
-        }
-      };
-  
-      // Telegram WebApp initialization
-      const initTelegramWebApp = () => {
-        if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-          const TelegramWebApp = window.Telegram.WebApp;
-          TelegramWebApp.ready();
-          TelegramWebApp.expand();
-        }
-      };
-  
-      // Call initialization functions
-      initializeGame();
-      initTelegramWebApp();
-  
-    // Check if TelegramWebApp is available
+      // Simulate initialization delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (error) {
+      console.error('Failed to initialize game:', error);
+      if (isMounted) {
+        TelegramWebApp.showAlert('Failed to load game data. Please try again.');
+      }
+    } finally {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Telegram WebApp initialization
+  const initTelegramWebApp = () => {
     if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
       const TelegramWebApp = window.Telegram.WebApp;
       TelegramWebApp.ready();
       TelegramWebApp.expand();
     }
+  };
+
+  // Call initialization functions
+  initializeGame();
+  initTelegramWebApp();
+
+  // Cleanup function
+  return () => {
+    isMounted = false;
+  };
+}, []);
   
     // Check if TelegramWebApp is available
     if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
@@ -764,7 +720,7 @@ const []); // Add dependencies
       const TelegramWebApp = window.Telegram.WebApp;
       TelegramWebApp.ready();
       TelegramWebApp.expand();
-  };
+    };
 
 
   useEffect(() => {
@@ -807,8 +763,9 @@ const []); // Add dependencies
       return task
     }))
   }, [level, user.level, popupShown.levelUp])
+}
 
-
+return () => {
   const renderHeader = () => (
     <div className="sticky top-0 z-10 bg-black/30 backdrop-blur-md p-2 rounded-full">
       <Card className="bg-transparent border-0 overflow-hidden">
@@ -842,7 +799,7 @@ const []); // Add dependencies
               variant="ghost"
               className="bg-transparent backdrop-filter backdrop-blur-sm text-white p-1 rounded-full shadow-lg transform transition-all duration-300 hover:scale-110 hover:rotate-3 active:scale-95 active:rotate-0"
               onClick={() => {
-                setCurrentPage('trophies')
+                setCurrentPage('troph ies')
                 playHeaderFooterSound()
               }}
             >
@@ -1181,9 +1138,9 @@ const []); // Add dependencies
                   <Button
                     className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-full text-xs font-bold transform transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-pink-700"
                     onClick={() => {
-                      setUser(prevUser => ({
-                        ...prevUser,
-                        coins: prevUser.coins + task.reward
+                      setUser (prevUser  => ({
+                        ...prevUser ,
+                        coins: prevUser .coins + task.reward
                       }));
                       setTasks(prevTasks => prevTasks.map(t => 
                         t.id === task.id ? { ...t, claimed: true } : t
@@ -1199,12 +1156,12 @@ const []); // Add dependencies
                 <Button
                   className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-full text-xs font-bold transform transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-cyan-700"
                   onClick={() => {
-                    task.action()
-                    playHeaderFooterSound()
+                    task.action();
+                    playHeaderFooterSound();
                   }}
                 >
-                  <ArrowRight className="w-4 h-4 mr-1" />
-                  <span>Go</span>
+                  <ArrowRight className=" w-4 h-4 mr-1" />
+                  <span>Start</span>
                 </Button>
               )}
             </div>
@@ -1212,7 +1169,7 @@ const []); // Add dependencies
         </NeonGradientCard>
       ))}
     </div>
-  )
+  );
 
   const renderRating = () => {
     return (
@@ -1812,6 +1769,6 @@ const []); // Add dependencies
         {!shownPopups.has('congratulation') && congratulationPopup.show && (
           <CongratulationPopup />
         )}
-        </div>
-  );
+    </div>
+  )
 }
