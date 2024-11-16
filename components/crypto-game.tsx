@@ -65,16 +65,15 @@ declare global {
 const TelegramWebApp = (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) 
     ? window.Telegram.WebApp 
     : { 
-        initData: '', // Add this line to provide a default empty string
+        initData: '', 
         sendData: () => console.log("sendData called, but Telegram WebApp is not available. "), 
         showAlert: (message: string) => alert(message), 
-        showConfirm: (message: string, callback: (confirmed: boolean) => void) => {
-          // Fallback to browser confirm dialog
-          const result = window.confirm(message);
-          callback(result);
-        },
-        getUserName: () => "Player",
-        getUserProfilePhoto: () => "https://example.com/user_profile_photo.jpg",
+        showConfirm: (message: string, callback: (confirmed: boolean) => void) => { 
+          const result = window.confirm(message); 
+          callback(result); 
+        }, 
+        getUserName: () => "Player", 
+        getUserProfilePhoto: () => "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Logo-oktTJZxRtnt9hm2dFnUILkTW3Dvnui.png", // Changed default image
         hapticFeedback: {
           impactOccurred: (style: string) => {
             // Fallback vibration if available
@@ -129,26 +128,33 @@ interface CryptoButtonProps {
   setCurrentPage: (page: string) => void;
 }
 
-const CryptoButton: React.FC<CryptoButtonProps> = ({ icon: Icon, href, text, isActive, setCurrentPage }) => (
-  <div>
-    <Button
-      variant="ghost"
-      className={`relative w-16 h-16 bg-transparent flex flex-col items-center justify-center ${isActive ? 'bg-gradient-to-t from-primary/20 to-transparent' : ''} bg-black/30 backdrop-blur-md text-white hover:bg-gray-800/50 transition-all duration-300 hover:text-white active:text-white`}
-      onClick={() => {
-        setCurrentPage(href)
-        playHeaderFooterSound()
-      }}
-    >
-      <Icon className={`w-8 h-8 mb-1 ${isActive ? 'text-primary' : 'text-white'}`} />
-      <span className={`text-xs ${isActive ? 'text-white' : 'text-gray-300'} group-hover:text-white`}>{text}</span>
-      {isActive && (
-        <div
-          className="absolute bottom-0 left-0 right-0 h-1 bg-primary"
-        />
-      )}
-    </Button>
-  </div>
-)
+const CryptoButton: React.FC<CryptoButtonProps> = ({ icon: Icon, href, text, isActive, setCurrentPage }) => {
+  const playHeaderFooterSound = () => {
+    const audio = new Audio('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Coin%20Button%20Sound-vLxAEYrnFJ4W4ZNzInbVnZpsMhwZLa.mp3')
+    return audio.play()
+  }
+
+  return (
+    <div>
+      <Button
+        variant="ghost"
+        className={`relative w-16 h-16 bg-transparent flex flex-col items-center justify-center ${isActive ? 'bg-gradient-to-t from-primary/20 to-transparent' : ''} bg-black/30 backdrop-blur-md text-white hover:bg-gray-800/50 transition-all duration-300 hover:text-white active:text-white`}
+        onClick={() => {
+          setCurrentPage(href)
+          playHeaderFooterSound()
+        }}
+      >
+        <Icon className={`w-8 h-8 mb-1 ${isActive ? 'text-primary' : 'text-white'}`} />
+        <span className={`text-xs ${isActive ? 'text-white' : 'text-gray-300'} group-hover:text-white`}>{text}</span>
+        {isActive && (
+          <div
+            className="absolute bottom-0 left-0 right-0 h-1 bg-primary"
+          />
+        )}
+      </Button>
+    </div>
+  )
+}
 
 const levelRequirements = [
   0, 25000, 300000, 500000, 1000000, 10000000, 50000000, 100000000, 500000000, 1000000000
@@ -242,7 +248,7 @@ export default function Component() {
   });
 
   const [currentUserRank, setCurrentUserRank] = useState(0);
-  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
   const [clickPower, setClickPower] = useState(1)
   const [profitPerHour, setProfitPerHour] = useState(0)
   const [wallet, setWallet] = useState<string | null>(null)
@@ -647,21 +653,25 @@ export default function Component() {
     rank: number;
   };
 
-// Leaderboard fetch function
-const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-  try {
-    return Array.from({ length: 200 }, (_, i) => ({
-      id: i + 1,
-      name: `Player${i + 1}`,
-      coins: Math.floor(Math.random() * 1000000) + 500000,
-      profitPerHour: Math.floor(Math.random() * 50000) + 25000,
-      rank: i + 1
-    })).sort((a, b) => b.coins - a.coins);
-  } catch (error) {
-    console.error('Failed to fetch leaderboard:', error);
-    return [];
-  }
-};
+  // Leaderboard fetch function
+  const fetchLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+    try {
+      return Array.from({ length: 200 }, (_, i) => ({
+        id: i + 1,
+        name: `Player${i + 1}`,
+        coins: Math.floor(Math.random() * 1000000) + 500000,
+        profitPerHour: Math.floor(Math.random() * 50000) + 25000,
+        rank: i + 1
+      })).sort((a, b) => b.coins - a.coins);
+    } catch (error) {
+      console.error('Failed to fetch leaderboard:', error);
+      return [];
+    }
+  };
+
+  useEffect(() => {
+    fetchLeaderboard().then(data => setLeaderboardData(data));
+  }, []);
   
 useEffect(() => {
   let isMounted = true;
@@ -674,8 +684,8 @@ useEffect(() => {
       const username = params.get('username');
 
       if (telegramId && username && isMounted) {
-        setUser (prevUser  => ({
-          ...prevUser ,
+        setUser(prevUser => ({
+          ...prevUser,
           name: username,
           telegramId: telegramId,
         }));
@@ -713,14 +723,16 @@ useEffect(() => {
     isMounted = false;
   };
 }, []);
-  
-    // Check if TelegramWebApp is available
-    if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
-      // Telegram Web App environment
-      const TelegramWebApp = window.Telegram.WebApp;
-      TelegramWebApp.ready();
-      TelegramWebApp.expand();
-    };
+
+// Check if TelegramWebApp is available
+useEffect(() => {
+  if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+    // Telegram Web App environment
+    const TelegramWebApp = window.Telegram.WebApp;
+    TelegramWebApp.ready();
+    TelegramWebApp.expand();
+  }
+}, []);
 
 
   useEffect(() => {
@@ -763,9 +775,8 @@ useEffect(() => {
       return task
     }))
   }, [level, user.level, popupShown.levelUp])
-}
 
-return () => {
+
   const renderHeader = () => (
     <div className="sticky top-0 z-10 bg-black/30 backdrop-blur-md p-2 rounded-full">
       <Card className="bg-transparent border-0 overflow-hidden">
@@ -1173,12 +1184,8 @@ return () => {
 
   const renderRating = () => {
     return (
-      <div 
-        className="flex flex-col items-center justify-start p-6 min-h-screen"
-      >
-        <div 
-          className="w-full max-w-2xl bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-gray-800"
-        >
+      <div className="flex flex-col items-center justify-start p-6 min-h-screen">
+        <div className="w-full max-w-2xl bg-gray-900/50 backdrop-blur-md rounded-lg shadow-lg overflow-hidden border border-gray-800">
           {leaderboardData.slice(0, 200).map((player, index) => (
             <div
               key={player.id}
@@ -1195,7 +1202,7 @@ return () => {
               } ${player.id === currentUserRank ? 'bg-gradient-to-r from-primary/50 to-primary-foreground/50' : ''}`}
             >
               <div className="flex items-center space-x-4">
-                <div                   className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
                     index < 3 
                       ? index === 0 
                         ? 'bg-yellow-400' 
@@ -1219,9 +1226,7 @@ return () => {
           ))}
         </div>
         {currentUserRank > 0 && (
-          <div
-            className="mt-8 p-4 bg-gradient-to-r from-primary/30 to-primary-foreground/30 rounded-lg shadow-lg backdrop-blur-md"
-          >
+          <div className="mt-8 p-4 bg-gradient-to-r from-primary/30 to-primary-foreground/30 rounded-lg shadow-lg backdrop-blur-md">
             <p className="text-white text-xl">Your current rank: <span className="font-bold text-white">{currentUserRank}</span></p>
           </div>
         )}
@@ -1592,18 +1597,17 @@ return () => {
 
 
 
-  const [currentUserRank, setCurrentUserRank] = useState(0);
-  const [leaderboardData, setLeaderboardData] = useState([]);
+
 
 
 // Inside your component
 
 
-  const showPopup = (popupType: string) => {
-    if (!shownPopups.has(popupType)) {
-      setShownPopups(prev => new Set(prev).add(popupType));
-    }
-  };
+const showPopup = (popupType: string) => {
+  if (!shownPopups.has(popupType)) {
+    setShownPopups(prev => new Set(prev).add(popupType));
+  }
+};
 
   if (isLoading) {
     return (
@@ -1695,80 +1699,80 @@ return () => {
     </Popup>
   );
   
-    return (
-      <div className="min-h-screen bg-black text-white overflow-hidden relative">
-        <style>{styles}</style>
-        <StarryBackground />
-        {renderHeader()}
-        <div>
-          <div className="flex-grow overflow-y-auto pb-20">
-            {currentPage === 'home' && renderHome()}
-            {currentPage === 'shop' && renderShop()}
-            {currentPage === 'tasks' && renderTasks()}
-            {currentPage === 'rating' && renderRating()}
-            {currentPage === 'wallet' && renderWallet()}
-            {currentPage === 'invite' && renderInvite()}
-            {currentPage === 'friendsActivity' && renderFriendsActivity()}
-            {currentPage === 'levels' && renderLevels()}
-            {currentPage === 'settings' && renderSettings()}
-            {currentPage === 'dailyReward' && renderDailyReward()}
-            {currentPage === 'trophies' && renderTrophies()}
-          </div>
+  return (
+    <div className="min-h-screen bg-black text-white overflow-hidden relative">
+      <style>{styles}</style>
+      <StarryBackground />
+      {renderHeader()}
+      <div>
+        <div className="flex-grow overflow-y-auto pb-20">
+          {currentPage === 'home' && renderHome()}
+          {currentPage === 'shop' && renderShop()}
+          {currentPage === 'tasks' && renderTasks()}
+          {currentPage === 'rating' && renderRating()}
+          {currentPage === 'wallet' && renderWallet()}
+          {currentPage === 'invite' && renderInvite()}
+          {currentPage === 'friendsActivity' && renderFriendsActivity()}
+          {currentPage === 'levels' && renderLevels()}
+          {currentPage === 'settings' && renderSettings()}
+          {currentPage === 'dailyReward' && renderDailyReward()}
+          {currentPage === 'trophies' && renderTrophies()}
         </div>
-        {renderFooter()}
-  
-        {/* Popup logic */}
-        {!shownPopups.has('pph') && showPPHPopup && (
-          <Popup
-            title="Profit Accumulated!"
-            onClose={() => {
-              setShowPPHPopup(false);
+      </div>
+      {renderFooter()}
+
+      {/* Popup logic */}
+      {!shownPopups.has('pph') && showPPHPopup && (
+        <Popup
+          title="Profit Accumulated!"
+          onClose={() => {
+            setShowPPHPopup(false);
+            showPopup('pph');
+          }}
+        >
+          <p className="mb-6 text-xl text-center text-white">
+            You've accumulated <span className="font-bold">{formatNumber(pphAccumulated)}</span> coins!
+          </p>
+          <Button
+            onClick={() => {
+              claimPPH();
               showPopup('pph');
             }}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center hover:from-blue-700 hover:to-blue-900 transition-all duration-300"
           >
-            <p className="mb-6 text-xl text-center text-white">
-              You've accumulated <span className="font-bold">{formatNumber(pphAccumulated)}</span> coins!
-            </p>
-            <Button
-              onClick={() => {
-                claimPPH();
-                showPopup('pph');
-              }}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center hover:from-blue-700 hover:to-blue-900 transition-all duration-300"
-            >
-              <Coins className="w-5 h-5 mr-2" />
-              Claim Profits
-            </Button>
-          </Popup>
-        )}
-  
-        {!shownPopups.has('levelUp') && showLevelUpPopup && (
-          <Popup
-            title="Level Up!"
-            onClose={() => {
-              setShowLevelUpPopup(false);
+            <Coins className="w-5 h-5 mr-2" />
+            Claim Profits
+          </Button>
+        </Popup>
+      )}
+
+      {!shownPopups.has('levelUp') && showLevelUpPopup && (
+        <Popup
+          title="Level Up!"
+          onClose={() => {
+            setShowLevelUpPopup(false);
+            showPopup('levelUp');
+          }}
+        >
+          <p className="mb-6 text-xl text-center text-white">
+            Congratulations! You've reached <span className="font-bold">Level {newLevel}</span>!
+          </p>
+          <Button
+            onClick={() => {
+              claimNewLevel();
               showPopup('levelUp');
             }}
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center hover:from-blue-700 hover:to-blue-900 transition-all duration-300"
           >
-            <p className="mb-6 text-xl text-center text-white">
-              Congratulations! You've reached <span className="font-bold">Level {newLevel}</span>!
-            </p>
-            <Button
-              onClick={() => {
-                claimNewLevel();
-                showPopup('levelUp');
-              }}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white px-4 py-2 rounded-full text-sm font-bold flex items-center justify-center hover:from-blue-700 hover:to-blue-900 transition-all duration-300"
-            >
-              <Star className="w-5 h-5 mr-2" />
-              Claim Rewards
-            </Button>
-          </Popup>
-        )}
+            <Star className="w-5 h-5 mr-2" />
+            Claim Rewards
+          </Button>
+        </Popup>
+      )}
 
-        {!shownPopups.has('congratulation') && congratulationPopup.show && (
-          <CongratulationPopup />
-        )}
+      {!shownPopups.has('congratulation') && congratulationPopup.show && (
+        <CongratulationPopup />
+      )}
     </div>
   )
 }

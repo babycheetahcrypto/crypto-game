@@ -1,12 +1,15 @@
-import React from 'react';
-import CryptoGame from '../components/crypto-game'; // Ensure this matches the exported name
+import TelegramAuth from '@/components/TelegramAuth';
+import { getSession } from '@/utils/session';
 
-const MainPage: React.FC = () => {
+
+export default async function Home() {
+  const session = await getSession()
+
   return (
-    <div>
-      <CryptoGame /> {/* Use the imported component */}
-    </div>
-  );
-};
-
-export default MainPage;
+    <main className="flex min-h-screen flex-col items-center justify-center p-24">
+      <h1 className="text-4xl font-bold mb-8">Jwt Authentication for Telegram Mini Apps</h1>
+      <pre>{JSON.stringify(session, null, 2)}</pre>
+      <TelegramAuth />
+    </main>
+  )
+}
